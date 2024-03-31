@@ -23,13 +23,15 @@ mango, then user gets 5 + 2 = 7 chances, as mango is a five-letter word.
 """
 
 import random
+from pathlib import Path
 
 
 class Hangman:
-    def __init__(self):
+    def __init__(self, level):
         self.max_attempts = 6
         self.current_attempts = 0
-        self.secret_word = Word().get_word()
+        self.level = level
+        self.secret_word = Word(level).get_word()
         self.guessed_letters = []
 
     def display_word(self):
@@ -65,16 +67,36 @@ class Hangman:
 
 
 class Word:
-    def __init__(self):
-        self.words = ["hangman", "python", "computer", "programming", "language", "artificial", "intelligence"]
+    def __init__(self, level):
+        self.words = self.load_words(level)
+
+    def load_words(self, level):
+        level_file = {
+            "easy": "game_level/easy.txt",
+            "medium": "game_level/medium.txt",
+            "hard": "game_level/hard.txt"
+        }
+
+        words_file = Path.cwd() / Path(level_file[level])
+        words = []
+        try:
+            with open(words_file, 'r') as file:
+                content = file.read()
+                words = [word.strip() for word in content.split(',')]
+        except FileNotFoundError as fnf:
+            print(f"Error: The file for level {level} could not be found: {fnf}")
+        return words
 
     def get_word(self):
         return random.choice(self.words)
 
 
 def main():
-    game = Hangman()
     print("Welcome to Hangman!")
+    level = input("Select game difficulty - Easy, Medium, Hard").lower()
+
+    game = Hangman(level)
+
     print("Word:", game.display_word())
 
     while not game.check_win() and game.current_attempts < game.max_attempts:
